@@ -8,9 +8,9 @@ from kivy.clock import Clock
 from random import randint
  
 class PongPaddle(Widget):
-    score = NumericProperty(0) ## очки игрока
+    score = NumericProperty(0) # player points
  
-    ## Отскок мячика при коллизии с панелькой игрока
+    # Ball bounce when colliding with the player's panel
     def bounce_ball(self, ball):
         if self.collide_widget(ball):
             vx, vy = ball.velocity
@@ -23,57 +23,56 @@ class PongPaddle(Widget):
  
 class PongBall(Widget):
  
-    # Скорость движения нашего шарика по двум осям
+    # The speed of movement of our ball along two axes
     velocity_x = NumericProperty(0)
     velocity_y = NumericProperty(0)
  
-    # Создаем условный вектор
+    # Create a conditional vector
     velocity = ReferenceListProperty(velocity_x, velocity_y)
  
-    # Заставим шарик двигаться
+    # Let's make the ball move
     def move(self):
         self.pos = Vector(*self.velocity) + self.pos
  
 class PongGame(Widget):
-    ball = ObjectProperty(None) # это будет наша связь с объектом шарика
-    player1 = ObjectProperty(None) # Игрок 1
-    player2 = ObjectProperty(None) # Игрок 2
+    ball = ObjectProperty(None) # this will be our connection with the ball object
+    player1 = ObjectProperty(None) # Player 1
+    player2 = ObjectProperty(None) # Player 2
  
     def serve_ball(self, vel=(4, 0)):
         self.ball.center = self.center
         self.ball.velocity = Vector(vel[0], vel[1]).rotate(randint(0, 360))
  
     def update(self, dt):
-        self.ball.move() # двигаем шарик в каждом обновлении экрана
+        self.ball.move() # move the ball in every screen update
  
-        # проверка отскока шарика от панелек игроков
+        # checking the ball rebound from the players' panels
         self.player1.bounce_ball(self.ball)
         self.player2.bounce_ball(self.ball)
  
-        # отскок шарика по оси Y
+        # ball bounce along the axis Y
         if(self.ball.y < 0) or (self.ball.top > self.height):
             self.ball.velocity_y *= -1 # инверсируем текущую скорость по оси Y
  
-        # отскок шарика по оси X
-        # тут если шарик смог уйти за панельку игрока, то есть игрок не успел отбить шарик
-        # то это значит что он проиграл и мы добавим +1 очко противнику
+        # ball bounce along the axis X
+        # here if the ball was able to go beyond the player's panel, that is, the player did not have time to hit the ball
+        # it means that he lost and we will add +1 point to the enemy
         if self.ball.x < self.x:
-            # Первый игрок проиграл, добавляем 1 очко второму игроку
+            # The first player lost, add 1 point to the second player
             self.player2.score += 1
-            self.serve_ball(vel=(4,0)) # заново спавним шарик в центре
- 
+            self.serve_ball(vel=(4,0)) # re-spawn the ball in the center
         if self.ball.x > self.width:
-            # Второй игрок проиграл, добавляем 1 очко первому игроку
+            # The second player lost, add 1 point to the first player
             self.player1.score += 1
-            self.serve_ball(vel=(-4,0)) # заново спавним шарик в центре
+            self.serve_ball(vel=(-4,0)) # re-spawn the ball to the center
  
-    # Событие прикосновения к экрану
+    # Screen touch event
     def on_touch_move(self, touch):
-        # первый игрок может касаться только своей части экрана (левой)
+        # the first player can only touch his part of the screen (left)
         if touch.x < self.width / 3:
             self.player1.center_y = touch.y
  
-        # второй игрок может касаться только своей части экрана (правой)
+        # the second player can only touch his own part of the screen (right)
         if touch.x > self.width - self.width / 3:
             self.player2.center_y = touch.y
  
